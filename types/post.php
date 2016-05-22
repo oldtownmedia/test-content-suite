@@ -24,12 +24,19 @@ class Post extends Abs\Type{
 	 */
 	private $metaboxes;
 
+	/**
+	 * type
+	 * Defines type slug for use elsewhere in the plugin
+	 *
+	 * @var string
+	 * @access protected
+	 */
 	protected $type = 'post';
 
 	/**
 	 * Constructor to load in the Metaboxes class.
 	 *
-	 * @see Metaboxes
+	 * @see object
 	 */
 	public function __construct(){
 
@@ -50,10 +57,9 @@ class Post extends Abs\Type{
 	 *
 	 * @param string $slug a custom post type ID.
 	 * @param boolean $connection Whether or not we're connected to the Internet.
-	 * @param boolean $echo Whether or not to echo. Optional.
 	 * @param int $num Optional. Number of posts to create.
 	 */
-	public function create_objects( $slug, $connection, $echo = false, $num = '' ){
+	public function create_objects( $slug, $connection, $num = '' ){
 
 		// If we're missing a custom post type id - don't do anything
 		if ( empty( $slug ) ){
@@ -77,9 +83,7 @@ class Post extends Abs\Type{
 
 			$return = $this->create_test_object( $slug, $supports, $metaboxes );
 
-			if ( $echo === true ){
-				echo \json_encode( $return );
-			}
+			return $return;
 
 		}
 
@@ -157,15 +161,15 @@ class Post extends Abs\Type{
 		}
 
 		// Check if we have errors and return them or created message
-		if ( is_wp_error( $return ) ){
-			error_log( $return->get_error_message() );
-			return $return;
+		if ( is_wp_error( $post_id ) ){
+			error_log( $post_id->get_error_message() );
+			return $post_id;
 		} else {
 			return array(
-				'type'		=> 'created',
+				'action'	=> 'created',
 				'object'	=> 'post',
-				'pid'		=> $post_id,
-				'post_type'	=> get_post_type( $post_id ),
+				'oid'		=> $post_id,
+				'type'		=> get_post_type( $post_id ),
 				'link_edit'	=> admin_url( '/post.php?post='.$post_id.'&action=edit' ),
 				'link_view'	=> get_permalink( $post_id ),
 			);
@@ -253,6 +257,32 @@ class Post extends Abs\Type{
 
 	}
 
+
+	/**
+	 * Delete all test data, regardless of type, within posts.
+	 *
+	 * @see Delete
+	 */
+	public function delete_all(){
+
+		$delete =  new Delete;
+
+		// Make sure that the current user is logged in & has full permissions.
+		if ( ! $delete->user_can_delete() ){
+			return;
+		}
+
+		// Loop through all post types and remove any test data
+		$post_types = get_post_types( array( 'public' => true ), 'objects' );
+		foreach ( $post_types as $post_type ) :
+
+		    return $this->delete( $post_type->name );
+
+		endforeach;
+
+	}
+
+
 	/**
 	 * Delete test data posts.
 	 *
@@ -263,14 +293,13 @@ class Post extends Abs\Type{
 	 * @see WP_Query, wp_delete_post
 	 *
 	 * @param string $slug a custom post type ID.
-	 * @param boolean $echo Whether or not to echo the result
 	 */
-	public function delete( $slug, $echo = false ){
+	public function delete( $slug ){
 
 		$delete =  new Delete;
 
 		// Make sure that the current user is logged in & has full permissions.
-		if ( !$delete->user_can_delete() ){
+		if ( ! $delete->user_can_delete() ){
 			return;
 		}
 
@@ -303,14 +332,12 @@ class Post extends Abs\Type{
 				// Find any media associated with the test post and delete it as well
 				$this->delete_associated_media( get_the_id() );
 
-				if ( $echo === true ){
-					$events[] = array(
-						'type'		=> 'deleted',
-						'pid'		=> get_the_id(),
-						'post_type'	=> get_post_type( get_the_id() ),
-						'link'		=> ''
-					);
-				}
+				$events[] = array(
+					'action'	=> 'deleted',
+					'oid'		=> get_the_id(),
+					'type'		=> get_post_type( get_the_id() ),
+					'link'		=> ''
+				);
 
 				// Force delete the post
 				wp_delete_post( get_the_id(), true );
@@ -320,11 +347,11 @@ class Post extends Abs\Type{
 			$obj = get_post_type_object( $slug );
 
 			$events[] = array(
-				'type'		=> 'general',
+				'action'	=> 'general',
 				'message'	=> __( 'Deleted', 'otm-test-content' ) . ' ' . $obj->labels->all_items
 			);
 
-			echo \json_encode( $events );
+			return $events;
 
 		}
 

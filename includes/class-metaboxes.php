@@ -342,9 +342,16 @@ class Metaboxes{
 
 				break;
 
-			case 'text_email':
+			case 'text_email' :
+			case 'email':
 
 				$value = TestContent::email();
+
+				break;
+
+			case 'number' :
+
+				$value = rand( 1, 10000000 );
 
 				break;
 
@@ -467,7 +474,6 @@ class Metaboxes{
 
 		// If we're dealing with a WP Error object, just return the message for debugging
 		} elseif ( is_wp_error( $value ) ){
-			error_log( $value->get_error_message() );
 			return $value->get_error_message();
 		}
 
@@ -502,7 +508,7 @@ class Metaboxes{
 		}
 
 		// Add extra, redundant meta. Because, why not have rows for the price of one?
-		if ( $cmb['source'] === 'acf' ){
+		if ( isset( $cmb['source'] ) && $cmb['source'] === 'acf' ){
 			add_post_meta( $post_id, '_' . $cmb['id'], $cmb['key'], true );
 		}
 

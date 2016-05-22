@@ -1,5 +1,6 @@
 <?php
 namespace testContent;
+use testContent\Views\Users as Users;
 
 /**
  * Class to handle deletion of test data for the plugin.
@@ -15,27 +16,29 @@ class Delete{
 	 *
 	 * @access private
 	 */
-	public function delete_all_test_data( $echo = false ){
+	public function delete_all_test_data(){
+		$return = '';
 
-		if ( !$this->user_can_delete() ){
+		if ( ! $this->user_can_delete() ){
 			return;
 		}
 
-		// Loop through all post types and remove any test data
-		$post_types = get_post_types( array( 'public' => true ), 'objects' );
-		foreach ( $post_types as $post_type ) :
+		$types = apply_filters( 'tc-types', array() );
 
-		    $this->delete_posts( $post_type->name, $echo );
+		if ( !empty( $types ) ){
 
-		endforeach;
+			foreach ( $types as $type ){
 
-		// Loop through all taxonomies and remove any data
-		$taxonomies = get_taxonomies();
-		foreach ( $taxonomies as $tax ) :
+				$class = 'testContent\Types\\' . ucwords( $type );
+				$object = new $class();
 
-		    $this->delete_terms( $tax, $echo );
+				$return .= $object->delete_all();
 
-		endforeach;
+			}
+
+		}
+
+		return $return;
 
 	}
 
@@ -48,10 +51,9 @@ class Delete{
 	 *
 	 * @see WP_Query, wp_delete_post
 	 *
-	 * @param string $slug a custom post type ID.
-	 * @param boolean $echo Whether or not to echo the result
+	 * @param string $data Information about the type.
 	 */
-	public function delete_objects( $echo = false, $data ){
+	public function delete_objects( $data ){
 
 		// Make sure that the current user is logged in & has full permissions.
 		if ( !$this->user_can_delete() ){
@@ -66,7 +68,8 @@ class Delete{
 		$slug = $data['slug'];
 
 		$object = new $type();
-		$object->delete( $slug, $echo );
+
+		return $object->delete( $slug );
 
 	}
 

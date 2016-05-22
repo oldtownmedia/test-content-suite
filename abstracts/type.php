@@ -20,13 +20,22 @@ abstract class Type{
 	 */
 	protected $type;
 
+	/**
+	 * connected
+	 * Whether or not we're successfully connected to the Internet.
+	 *
+	 * @var boolean
+	 * @access private
+	 */
+	protected $connected;
+
 
 	/**
 	 * Registers the type with the rest of the plugin
 	 */
 	public function register_type(){
 
-		add_action( 'tc_types', 'set_type' );
+		add_filter( 'tc-types', array( $this, 'set_type' ) );
 
 	}
 

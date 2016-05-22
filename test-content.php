@@ -4,8 +4,8 @@
  * Plugin URI: https://github.com/oldtownmedia/test-content-suite
  * Description: Spin up test posts, pages, CPTs, and terms from an easy-to-use admin page.
  * Version: 1.0
- * Author: Old Town Media
- * Author URI: https://github.com/oldtownmedia/
+ * Author: Mike Selander
+ * Author URI: https://github.com/mikeselander/
  * Text Domain: otm-test-content
  * Domain Path: /languages
  * License: GPL2
@@ -74,16 +74,19 @@ function test_content_autoloader( $class ) {
 		'basename'	=> plugin_basename( __FILE__ ),
 		'directory'	=> plugin_dir_path( __FILE__ ),
 		'file'		=> __FILE__,
-		'slug' 		=> 'structure',
+		'slug' 		=> 'test-content',
 		'url'		=> plugin_dir_url( __FILE__ )
 	)
 );
 
  // Register hook providers and views.
  plugin()->register_hooks( new AdminPage() )
-         ->register_views( new Views\Posts() )
-         ->register_views( new Views\Terms() )
-		 ->register_views( new Views\Various() );
+ 		 ->register_hooks( new Ajax() )
+         ->register_view( new Views\Posts() )
+         ->register_view( new Views\Terms() )
+		 ->register_view( new Views\Various() )
+		 ->register_type( new Types\Post() )
+		 ->register_type( new Types\Term() );
 
 // Load textdomain hook
 add_action( 'plugins_loaded', array( plugin(), 'load_textdomain' ) );

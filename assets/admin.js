@@ -2,8 +2,6 @@ jQuery(document).ready(function($) {
 
 	var tabId = window.location.hash.substr(1);
 
-	console.log( tabId );
-
 	// Trigger our initial tab to display
 	if ( tabId ){
 		$( '.nav-tab[data-type="' + tabId + '"]' ).addClass( 'nav-tab-active' );
@@ -72,22 +70,19 @@ jQuery(document).ready(function($) {
 			jQuery.post(
 				ajaxurl,
 				data,
-				function(response) {}).done(function(response){
+				function(response) {}).done(function( response ){
+
+				if ( !response ){
+					return;
+				}
+
+				console.log( response );
 
 				var parsed = JSON.parse( response );
 
 				if ( todo == 'create' ){
 
-					// Assemble different strings if post or term
-					if ( parsed.object == 'post' ){
-						var type = parsed.post_type,
-							id = parsed.pid;
-					} else if( parsed.object == 'term' ){
-						var type = parsed.taxonomy,
-							id = parsed.tid;
-					}
-
-					jQuery( '#status-updates' ).append( innerCount + ': ' + test_content.createdStr + ' ' + type + ' ' + id + ': ' + '<a href="' + parsed.link_edit + '">Edit</a> | ' + '<a href="' + parsed.link_view + '">View</a>\n' );
+					jQuery( '#status-updates' ).append( innerCount + ': ' + test_content.createdStr + ' ' + parsed.type + ' ' + parsed.oid + ': ' + '<a href="' + parsed.link_edit + '">Edit</a> | ' + '<a href="' + parsed.link_view + '">View</a>\n' );
 
 					// Re-up our number & scroll to bottom
 					innerCount++;
@@ -98,8 +93,8 @@ jQuery(document).ready(function($) {
 					count = parsed.length;
 
 					for( i=0; i<count; i++ ){
-						if ( parsed[i].type == 'deleted' ){
-							jQuery( '#status-updates' ).append( innerCount + ': ' + test_content.deletedStr + ' ' + parsed[i].post_type + ' ' + parsed[i].pid + '\n' );
+						if ( parsed[i].action == 'deleted' ){
+							jQuery( '#status-updates' ).append( innerCount + ': ' + test_content.deletedStr + ' ' + parsed[i].type + ' ' + parsed[i].oid + '\n' );
 						} else {
 							jQuery( '#status-updates' ).append( parsed[i].message + '\n' );
 						}

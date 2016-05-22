@@ -350,8 +350,18 @@ CSSland,
 
 		);
 
-		for( $i = 1; $i < 6; $i++ ){
-			$content .= $random_content_types[rand( 0, 12 )];
+		$used_keys = array();
+		for( $i = 1; $i < 7; $i++ ){
+
+			// Pull a new random key and make sure we're not repeating any elements
+			$key = rand( 0, 12 );
+			while( in_array( $key, $used_keys ) ){
+				$key = rand( 0, 12 );
+			}
+
+			$content .= $random_content_types[$key];
+
+			$used_keys[] = $key;
 		}
 
 		return apply_filters( "tc_paragraphs_data", $content );
@@ -590,20 +600,59 @@ CSSland,
 	 *
 	 * @return string Email address.
 	 */
-	public static function email(){
+	public static function email( $superrandom = false ){
 
-		$email_addresses = array(
-			'mike@oldtownmediainc.com',
-			'me@me.com',
-			'joe@smith.org+15',
-			'jane@janedoe.com',
-			'help@github.com',
-			'brian_roberts@comcast.com',
-			'inigo@iaminigomontoyayoukilledmyfatherpreparetodie.com',
-			'witch@theyellowbrickroad.com'
-		);
+		// In certain situations we need to ensure that the email is never
+		// duplicated, like in creating new users.
+		if ( $superrandom !== false ){
+			$user = $domain = '';
 
-		return apply_filters( "tc_email_data", $email_addresses[ rand( 0, 7 ) ] );
+			$tlds = array(
+				"com",
+				"net",
+				"gov",
+				"org",
+				"edu",
+				"biz",
+				"info"
+			);
+
+			$char = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+			$user_length = mt_rand( 5, 20 );
+		    $domain_length = mt_rand( 7, 12 );
+
+			for ( $i = 1; $i <= $user_length; $i++ ){
+				$user .= substr( $char, mt_rand( 0, strlen( $char ) ), 1 );
+			}
+
+			for ( $i = 1; $i <= $domain_length; $i++ ){
+				$domain .= substr( $char, mt_rand( 0, strlen( $char ) ), 1 );
+			}
+
+			$tld = $tlds[ mt_rand( 0, ( sizeof( $tlds ) - 1 ) ) ];
+
+			$email = $user . "@" . $domain . '.' . $tld;
+
+		} else {
+
+			$email_addresses = array(
+				'mike@oldtownmediainc.com',
+				'me@me.com',
+				'joe@smith.org+15',
+				'jane@janedoe.com',
+				'help@github.com',
+				'brian_roberts@comcast.com',
+				'inigo@iaminigomontoyayoukilledmyfatherpreparetodie.com',
+				'witch@theyellowbrickroad.com'
+			);
+
+			$email = $email_addresses[ rand( 0, 7 ) ];
+
+		}
+
+
+		return apply_filters( "tc_email_data", $email );
 
 	}
 
@@ -711,6 +760,70 @@ CSSland,
 		}
 
 		return apply_filters( "tc_video_data", $links[ rand( 0, 8 ) ] );
+
+	}
+
+	/**
+	 * Name function.
+	 *
+	 * Makes a random name.
+	 *
+	 * @return array Randomly strung together name.
+	 */
+	public static function name(){
+
+		$first_names = array(
+			'Jacqui',
+			'Buffy',
+			'Teddy',
+			'Cindie',
+			'Carroll',
+			'Karly',
+			'Maricela',
+			'Kittie',
+			'Jetta',
+			'Denise',
+			'Guillermo',
+			'Domingo',
+			'Benjamin',
+			'Olga',
+			'Shane',
+			'Bessie',
+			'Jose',
+			'Damon',
+			'Rodolfo',
+			'George',
+		);
+
+		$last_names = array(
+			'Henley',
+			'Trask',
+			'Dick',
+			'Irby',
+			'Raley',
+			'Bland',
+			'Rossi',
+			'Gunther',
+			'Mchenry',
+			'Isaacs',
+			'Romero',
+			'Mcbride',
+			'Armstrong',
+			'Mccoy',
+			'Evans',
+			'Dennis',
+			'Swanson',
+			'Estrada',
+			'Johnston',
+			'Graves',
+		);
+
+		$name = array(
+			'first'	=> $first_names[ rand( 0, 19 ) ],
+			'last'	=> $last_names[ rand( 0, 19 ) ]
+		);
+
+		return apply_filters( "tc_name_data", $name );
 
 	}
 

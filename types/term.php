@@ -14,6 +14,13 @@ use testContent\Delete as Delete;
  */
 class Term extends Abs\Type{
 
+	/**
+	 * type
+	 * Defines type slug for use elsewhere in the plugin
+	 *
+	 * @var string
+	 * @access protected
+	 */
 	protected $type = 'term';
 
 	/**
@@ -28,15 +35,17 @@ class Term extends Abs\Type{
 	 * @see $this->get_cpt_supports, $this->get_metaboxes, $this->create_test_object
 	 *
 	 * @param string $slug a custom post type ID.
-	 * @param boolean $echo Whether or not to echo. Optional.
 	 * @param int $num Optional. Number of posts to create.
 	 */
-	public function create_objects( $slug, $connection, $echo = false, $num = '' ){
+	public function create_objects( $slug, $connection, $num = '' ){
 
 		// If we're missing a custom post type id - don't do anything
 		if ( empty( $slug ) ){
 			return;
 		}
+
+		// Set our connection status for the rest of the methods
+		$this->connected = $connection;
 
 		// If we forgot to put in a quantity, make one for us
 		if ( empty( $num ) ){
@@ -48,9 +57,7 @@ class Term extends Abs\Type{
 
 			$return = $this->create_test_object( $slug );
 
-			if ( $echo === true ){
-				echo \json_encode( $return );
-			}
+			return $return;
 
 		}
 
@@ -94,16 +101,43 @@ class Term extends Abs\Type{
 			return $return;
 		} else {
 			return array(
-				'type'		=> 'created',
+				'action'	=> 'created',
 				'object'	=> 'term',
-				'tid'		=> $return['term_id'],
-				'taxonomy'	=> $slug,
+				'oid'		=> $return['term_id'],
+				'type'		=> $slug,
 				'link_edit'	=> admin_url( '/edit-tags.php?action=edit&taxonomy='.$slug.'&tag_ID='.$return['term_id'] ),
 				'link_view'	=> get_term_link( $return['term_id'] )
 			);
 		}
 
 	}
+
+
+
+	/**
+	 * Delete all test data, regardless of type, within terms.
+	 *
+	 * @see Delete
+	 */
+	public function delete_all(){
+
+		$delete =  new Delete;
+
+		// Make sure that the current user is logged in & has full permissions.
+		if ( ! $delete->user_can_delete() ){
+			return;
+		}
+
+		// Loop through all taxonomies and remove any data
+		$taxonomies = get_taxonomies();
+		foreach ( $taxonomies as $tax ) :
+
+			$this->delete( $tax );
+
+		endforeach;
+
+	}
+
 
 	/**
 	 * Delete test data terms.
@@ -115,9 +149,8 @@ class Term extends Abs\Type{
 	 * @see WP_Query, wp_delete_post
 	 *
 	 * @param string $slug a custom post type ID.
-	 * @param boolean $echo Whether or not to echo the result
 	 */
-	public function delete( $slug, $echo = false ){
+	public function delete( $slug ){
 
 		$delete =  new Delete;
 
@@ -151,14 +184,12 @@ class Term extends Abs\Type{
 
 			foreach ( $terms as $term ){
 
-				if ( $echo === true ){
-					$events[] = array(
-						'type'		=> 'deleted',
-						'pid'		=> $term->term_id,
-						'post_type'	=> $slug,
-						'link'		=> ''
-					);
-				}
+				$events[] = array(
+					'action'	=> 'deleted',
+					'oid'		=> $term->term_id,
+					'type'		=> $slug,
+					'link'		=> ''
+				);
 
 				// Delete our term
 				wp_delete_term( $term->term_id, $slug );
@@ -168,11 +199,11 @@ class Term extends Abs\Type{
 			$taxonomy = get_taxonomy( $slug );
 
 			$events[] = array(
-				'type'		=> 'general',
+				'action'	=> 'general',
 				'message'	=> __( 'Deleted', 'otm-test-content' ) . ' ' . $taxonomy->labels->name
 			);
 
-			echo \json_encode( $events );
+			return $events;
 
 		}
 
